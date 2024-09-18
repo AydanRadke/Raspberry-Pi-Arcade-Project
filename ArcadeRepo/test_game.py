@@ -5,6 +5,8 @@ import pygame
 from pygame.locals import *
 import random
 import sys
+import time
+import math
 
 # Pygame initialization and important constants
 pygame.init()
@@ -81,15 +83,20 @@ class Player(pygame.sprite.Sprite):
                     self.pos.y = hits[0].rect.top + 1
                     self.vel.y = 0
                     self.jumping = False
-    
+        else:
+            if hits:
+                    self.vel.y = 0
+                    self.acc.y = 0 
+                    self.jumping = False
 
+    
 class platform(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         # Generates a surface of random size and location
         self.surf = pygame.Surface((random.randint(50,100), 12))
         self.surf.fill((0,255,0))
-        self.rect = self.surf.get_rect(center = (random.randint(0, WIDTH-10), random.randint(0, HEIGHT-30)))
+        self.rect = self.surf.get_rect(center = (random.randint(0, WIDTH-10), random.randint(0, HEIGHT-25)))
 
     def move(self):
         pass
@@ -117,6 +124,7 @@ def platform_generation():
             C = check(p, platforms)
         platforms.add(p)
         all_sprites.add(p)
+        print("platform added!")
 
 # Create sprites and then put them in a group. We group them so they can be updated later on in the game loop.
 platform_one = platform()
@@ -135,10 +143,18 @@ platforms = pygame.sprite.Group()
 platforms.add(platform_one)
 
 # Generates platforms of the differing size and location
+# This was a change I made, I applied similar logic that is in our platform class for our first platforms.
 for x in range(random.randint(5, 6)):
-    pl = platform()
-    platforms.add(pl)
-    all_sprites.add(pl)
+    width = random.randrange(50,100)
+    p = platform()
+    C = True
+    
+    while C:
+        p = platform()
+        p.rect.center = (random.randrange(0, WIDTH - width), random.randrange(0, math.floor(HEIGHT * (2/3))))
+        C = check(p, platforms)
+    platforms.add(p)
+    all_sprites.add(p)
 
 # main game loop
 while True:
@@ -164,12 +180,23 @@ while True:
     # TODO I think that the platform generation is somehow making an infinite loop and breaking the game.
     platform_generation()
 
+    # This handles the screen scrolling! When the player goes above the lower 2/3 of the screen, all sprites are moved downward.
     if player_one.rect.top <= HEIGHT / 3:
         player_one.pos.y += abs(player_one.vel.y)
         for plat in platforms:
             plat.rect.y += abs(player_one.vel.y)
             if plat.rect.top >= HEIGHT:
                 plat.kill()
+    
+    # Game over
+    if player_one.rect.top > HEIGHT:
+        for entity in all_sprites:
+            entity.kill()
+            displaysurface.fill((255,0,0))
+            pygame.display.update()
+            time.sleep(1)
+            pygame.quit()
+            sys.exit()
 
     pygame.display.update()
     frames_per_sec.tick(FPS)
