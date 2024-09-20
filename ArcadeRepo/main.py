@@ -4,6 +4,9 @@ import sys
 from classes.player import Player
 from classes.wall import Wall
 from classes.enemy import Enemy
+from levelgen import *
+import levelgen
+import rooms.roomconfig
 
 # Pygame initialization
 pygame.init()
@@ -34,9 +37,15 @@ all_sprites = pygame.sprite.Group()
 all_sprites.add(random_wall)
 all_sprites.add(minion)
 
+# Room creation test
+test_blueprint = Blueprint(rc.config['room2'])
+test_room = Room(len(test_blueprint.layout[0]), len(test_blueprint.layout))
+test_blueprint.apply(test_room)
+all_sprites.add(test_room.create_room(100, 100))
+
 # main game loop!
 while True:
-    ''' I'll explain what delta time is right here. Basically, it's the change in time between frames.
+    ''' Delta time is basically the change in time between frames.
     It will allow us to keep our changes consistent if the framerate ever changes'''
     delta_time = frames_per_sec.get_time() / 1000
     for event in pygame.event.get():
@@ -49,11 +58,11 @@ while True:
     
     display_surface.fill((0,0,0))
 
-    player_one.move(ACC, delta_time, FRIC, all_sprites)
-    display_surface.blit(player_one.surf, player_one.rect)
     for entity in all_sprites:
         entity.move(ACC, delta_time, FRIC, all_sprites)
         display_surface.blit(entity.surf, entity.rect)
 
+    player_one.move(ACC, delta_time, FRIC, all_sprites)
+    display_surface.blit(player_one.surf, player_one.rect)
     pygame.display.update()
     frames_per_sec.tick(FPS)

@@ -2,16 +2,15 @@ import pygame
 vec = pygame.math.Vector2
 
 class Wall(pygame.sprite.Sprite):
-    def __init__(self, image, WALL_WIDTH, WALL_HEIGHT, WIDTH, HEIGHT):
+    def __init__(self, image, WALL_WIDTH, WALL_HEIGHT, x, y):
         super().__init__()
         image = pygame.transform.scale(image, (WALL_WIDTH, WALL_HEIGHT))
         self.surf = image
         self.rect = self.surf.get_rect()
 
-        self.pos = vec((WIDTH / 3, HEIGHT / 3))
+        self.pos = vec((x, y))
 
-        self.rect.centerx = self.pos.x
-        self.rect.centery = self.pos.y
+        self.rect.topleft = self.pos
     
     def move(self, ACC, delta_time, FRIC, all_sprites):
-        self.rect.center = self.pos
+        self.rect.topleft = self.pos
