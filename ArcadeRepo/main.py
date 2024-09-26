@@ -38,10 +38,15 @@ all_sprites.add(random_wall)
 all_sprites.add(minion)
 
 # Room creation test
-test_blueprint = Blueprint(rc.config['room2'])
+test_blueprint = Blueprint(rc.config['hub']['aydanhub1'])
 test_room = Room(len(test_blueprint.layout[0]), len(test_blueprint.layout))
 test_blueprint.apply(test_room)
-all_sprites.add(test_room.create_room(100, 100))
+walls, floors = test_room.create_room(100, 100)
+
+for x in floors:
+    all_sprites.add(x)
+for x in walls:
+    all_sprites.add(x)
 
 # main game loop!
 while True:

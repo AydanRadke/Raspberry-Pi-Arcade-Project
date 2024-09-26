@@ -1,4 +1,4 @@
-room2_setup={
+adamnormal1_setup={
     "layout":
     [
         ["wall","floor","floor","wall"],

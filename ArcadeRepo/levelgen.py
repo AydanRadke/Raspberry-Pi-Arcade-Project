@@ -6,7 +6,7 @@ from classes.floor import Floor
 
 TILE_WIDTH = 200
 TILE_HEIGHT = 200
-
+floor_image = pygame.image.load('ArcadeRepo/assets/stonefloor.jpg')
 # This class will be interacted with by a Blueprint object. It basically decodes the information from the
 # blueprint and then draws it. I chose this because it is a very expandable design.
 class Room:
@@ -26,41 +26,62 @@ class Room:
     # method will grow into a very large one as we add features to the game. It will return a list of sprites
     # So they can be added to sprite groups in the main script
     def create_room(self, x, y):
-        sprites = []
+        walls = []
+        floors = []
         # loop through the 2d list, and create the sprites for the tiles as we go.
         for y_level, row in enumerate(self.tiles):
             temp_x = x
             for tile_number, tile in enumerate(row):
+                # Initialize these as false values so if they don't get set we don't error out
+                floor = False
+                under_floor = False
+                wall = False
                 if tile == "wall":
                     # Top row wall
                     if y_level == 0:
                         # TODO Change constant values to something that scales with screen size later!!
                         WALL_WIDTH, WALL_HEIGHT = TILE_WIDTH, TILE_HEIGHT
+                        under_floor = Floor(floor_image, TILE_WIDTH, TILE_HEIGHT, temp_x, y)
                     # Bottom row wall
                     elif y_level == len(self.tiles) - 1:
                         WALL_WIDTH, WALL_HEIGHT = TILE_WIDTH, TILE_HEIGHT/2
                     # Left side wall
                     elif tile_number == 0:
                         WALL_WIDTH, WALL_HEIGHT = TILE_WIDTH/2, TILE_HEIGHT
+                        under_floor = Floor(floor_image, TILE_WIDTH, TILE_HEIGHT, temp_x, y)
                     # Right side wall
                     elif tile_number == len(row) - 1:
                         WALL_WIDTH, WALL_HEIGHT = TILE_WIDTH/2, TILE_HEIGHT
+                        under_floor = Floor(floor_image, TILE_WIDTH, TILE_HEIGHT, temp_x, y)
                         temp_x += TILE_WIDTH - WALL_WIDTH
+                    else:
+                        # This is for the case that the wall is on the inside of the room.
+                        WALL_WIDTH, WALL_HEIGHT = TILE_WIDTH, TILE_HEIGHT
+                        # The under floor is here in case we want to change the size of interior walls later
+                        under_floor = Floor(floor_image, TILE_WIDTH, TILE_HEIGHT, temp_x, y)
 
                     image = pygame.image.load('ArcadeRepo/assets/woodenwall.jpg')
-                    sprite = Wall(image, WALL_WIDTH, WALL_HEIGHT, temp_x, y)
+                    wall = Wall(image, WALL_WIDTH, WALL_HEIGHT, temp_x, y)
+
                     if WALL_WIDTH < TILE_WIDTH:
                         temp_x += TILE_WIDTH - WALL_WIDTH
                     temp_x += WALL_WIDTH
 
-                # TODO do the floors later ig
+                # TODO FIX THIS NEXT
                 if tile == "floor":
+                    floor = Floor(floor_image, TILE_WIDTH, TILE_HEIGHT, temp_x, y)
                     temp_x += TILE_WIDTH
 
-                sprites.append(sprite)
+                if under_floor:
+                    floors.append(under_floor)
+                if floor:
+                    floors.append(floor)
+                if wall:
+                    walls.append(wall)
+
+                # TODO Walls need to be appended second so they are rendered on top of floors!!
             y += TILE_HEIGHT
-            print("x should reset!!")
-        return sprites
+        return walls, floors
 
 
 
@@ -84,9 +105,3 @@ class Blueprint:
             for x, y in positions:
                 room.add_feature(x, y, feature)
 
-
-def draw_room(room_list, starting_point):
-    pass
-
-def level_generation():
-    pass

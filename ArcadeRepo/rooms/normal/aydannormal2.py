@@ -2,7 +2,7 @@
 # of the room will have a certain value to decide what gets generated there. Each value could be a list or
 # dict to generate another asset on top of a different one? 
 
-room1_setup = {
+aydannormal2_setup = {
     'layout':
     [['wall','wall','floor','wall','wall'],
     ['wall','floor','floor','floor','wall'],
