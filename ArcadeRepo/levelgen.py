@@ -1,6 +1,5 @@
 import pygame
 from pygame.locals import *
-import rooms.roomconfig as rc
 from classes.wall import Wall
 from classes.floor import Floor
 
@@ -26,6 +25,10 @@ class Room:
     # method will grow into a very large one as we add features to the game. It will return a list of sprites
     # So they can be added to sprite groups in the main script
     def create_room(self, x, y):
+        # Stores the top left and bottom right coordinate for later use.
+        self.top_left = (x, y)
+        self.bot_right = (x + TILE_WIDTH * self.width, y + TILE_HEIGHT * self.height)
+
         walls = []
         floors = []
         # loop through the 2d list, and create the sprites for the tiles as we go.
@@ -67,9 +70,11 @@ class Room:
                         temp_x += TILE_WIDTH - WALL_WIDTH
                     temp_x += WALL_WIDTH
 
-                # TODO FIX THIS NEXT
-                if tile == "floor":
-                    floor = Floor(floor_image, TILE_WIDTH, TILE_HEIGHT, temp_x, y)
+                if tile == "floor" or tile == "door":
+                    if y_level == len(self.tiles) - 1:
+                        floor = Floor(floor_image, TILE_WIDTH, TILE_HEIGHT/2, temp_x, y)
+                    else:
+                        floor = Floor(floor_image, TILE_WIDTH, TILE_HEIGHT, temp_x, y)
                     temp_x += TILE_WIDTH
 
                 if under_floor:
@@ -78,6 +83,9 @@ class Room:
                     floors.append(floor)
                 if wall:
                     walls.append(wall)
+                
+                if not tile:
+                    temp_x += TILE_WIDTH
 
                 # TODO Walls need to be appended second so they are rendered on top of floors!!
             y += TILE_HEIGHT
@@ -105,3 +113,5 @@ class Blueprint:
             for x, y in positions:
                 room.add_feature(x, y, feature)
 
+def draw_flow(flow, start_x, start_y):
+    pass

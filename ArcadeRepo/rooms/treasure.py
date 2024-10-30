@@ -1,10 +1,10 @@
 treasure_setup = {
     'layout':
-    [['wall','wall','floor','wall','wall'],
+    [['wall','wall','door','wall','wall'],
     ['wall','floor','floor','floor','wall'],
-    ['floor','floor','floor','floor','floor'],
+    ['door','floor','floor','floor','door'],
     ['wall','floor','floor','floor','wall'],
-    ['wall','wall','floor','wall','wall']],
+    ['wall','wall','door','wall','wall']],
     "special_features":{
         
     }

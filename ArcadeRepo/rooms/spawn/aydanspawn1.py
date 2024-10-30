@@ -1,10 +1,10 @@
 aydanspawn1_setup = {
     'layout':
-    [['wall','wall','floor','wall','wall'],
+    [['wall','wall','door','wall','wall'],
     ['wall','floor','floor','floor','wall'],
-    ['wall','floor','wall','floor','wall'],
+    ['door','floor','wall','floor','door'],
     ['wall','floor','floor','floor','wall'],
-    ['wall','wall','wall','wall','wall']],
+    ['wall','wall','door','wall','wall']],
     "special_features":{
         
     }

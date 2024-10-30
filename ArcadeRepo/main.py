@@ -6,7 +6,8 @@ from classes.wall import Wall
 from classes.enemy import Enemy
 from levelgen import *
 import levelgen
-import rooms.roomconfig
+import rooms.roomconfig as rc
+import flows.aydanflow1
 
 # Pygame initialization
 pygame.init()
@@ -38,10 +39,17 @@ all_sprites.add(random_wall)
 all_sprites.add(minion)
 
 # Room creation test
-test_blueprint = Blueprint(rc.config['hub']['aydanhub1'])
+test_blueprint = Blueprint(rc.config['spawn']['aydanspawn1'])
 test_room = Room(len(test_blueprint.layout[0]), len(test_blueprint.layout))
 test_blueprint.apply(test_room)
 walls, floors = test_room.create_room(100, 100)
+
+for x in floors:
+    all_sprites.add(x)
+for x in walls:
+    all_sprites.add(x)
+
+rooms, walls, floors, parent = flows.aydanflow1.aydanflow1.draw_level(parent=test_room)
 
 for x in floors:
     all_sprites.add(x)
