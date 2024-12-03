@@ -3,6 +3,7 @@ vec = pygame.math.Vector2
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, image, WIDTH, HEIGHT):
+        
         super().__init__()
         self.surf = image
         self.rect = self.surf.get_rect()

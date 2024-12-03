@@ -5,13 +5,14 @@ from flows.node import Node
 
 aydanflow1 = Node('normal')
 room = Node('normal')
-room.add_child(Node('normal').add_child(Node('treasure')))
 
 hub = Node('hub')
+hub.add_child(Node('normal').add_child(Node('normal').add_child(Node('boss'))))
 hub.add_child(Node('normal').add_child(Node('treasure')))
 hub.add_child(Node('normal').add_child(Node('normal').add_child(Node('shop'))))
-hub.add_child(Node('normal').add_child(Node('normal').add_child(Node('normal'))))
+
 room.add_child(hub)
+room.add_child(Node('normal').add_child(Node('treasure')))
 
 aydanflow1.add_child(room)
 
