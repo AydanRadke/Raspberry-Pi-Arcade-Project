@@ -1,5 +1,7 @@
 import pygame
 from pygame.locals import *
+import math
+from .bullet import Bullet
 vec = pygame.math.Vector2
 # TODO try to get this fixed lol
 # This is our player class
@@ -16,13 +18,34 @@ class Player(pygame.sprite.Sprite):
         self.pos = vec((WIDTH / 2, HEIGHT / 2))
         self.vel = vec(0,0)
         self.acc = vec(0,0)
+        self.health = 6
 
         self.rect.centerx = self.pos.x
         self.rect.centery = self.pos.y
         self.dashing = False
+        self.acceleration_value = 0
+        self.dashing_cooldown = 1.5
+        self.dashing_cooldown_left = self.dashing_cooldown
+
+        self.damage_cooldown = 1
+        self.damage_cooldown_left = self.damage_cooldown
+
+        self.shooting_cooldown_time = 0.5  # Shooting cooldown
+        self.shooting_cooldown_left = self.shooting_cooldown_time  # Time before player can shoot again
+        
     
-    # Figure out how tf to do this. Should I set these as parameters?? idk
-    def move(self, ACC, delta_time, FRIC, all_sprites, walls):
+    def move(self, ACC, delta_time, FRIC, all_sprites, walls, rooms):
+        
+        # subtract from damage cooldown
+        self.damage_cooldown_left -= delta_time
+        # if out of health, end game
+        if self.health <= 0:
+            self.kill()
+            quit()
+
+        self.dashing_cooldown_left -= delta_time
+        self.shooting_cooldown_left -= delta_time
+        self.acceleration_value = ACC
         self.acc = vec(0, 0)
         pressed_keys = pygame.key.get_pressed()
 
@@ -40,14 +63,6 @@ class Player(pygame.sprite.Sprite):
         self.acc += self.vel * -FRIC
         self.vel += self.acc
 
-        # TODO The problem here is that the up and down directions take collision priority over left and right
-        # if you're colliding with a wall on the right or left, and move up it detects it as a up and down
-        # collision, simply because of the if elif order. Maybe find a way to fix it
-        # Idea, set a tolerance. math.abs(self.rect.bottom - wall.rect.top > tolerance)
-        # Because while colliding right or left it overlaps, and if you move up then it passes the up and down
-        # collision check.
-        # Might need to only add a tolerance statement to the up and down checks, because the left and right
-        # don't misfire.
         for wall in walls:
             if self.rect.colliderect(wall.rect):  # Check if the player collides with a wall
                 overlap_left = abs(self.rect.left - wall.rect.right)
@@ -112,6 +127,25 @@ class Player(pygame.sprite.Sprite):
         for entity in all_sprites:
             entity.pos += -self.vel
         
+        for room in rooms:
+            room.bot_right[0] += -self.vel.x
+            room.bot_right[1] += -self.vel.y
+            room.top_left[0] += -self.vel.x
+            room.top_left[1] += -self.vel.y
+    
+    def shoot(self, enemies):
+        if self.shooting_cooldown_left <= 0:
+            speed = self.acceleration_value * 6
+            starting_position = self.rect.center
+            new_bullet = Bullet(speed, starting_position, enemies, self.vel.normalize()) # TODO NOT IMPORTING RIGHT
+            self.shooting_cooldown_left = self.shooting_cooldown_time
+            return new_bullet
+        
+        return None
+
+        
     def dash(self):
-        if not self.dashing:
-            self.vel *= 8
+        if self.dashing_cooldown_left <= 0:
+            if not self.dashing:
+                self.vel *= 8
+            self.dashing_cooldown_left = self.dashing_cooldown

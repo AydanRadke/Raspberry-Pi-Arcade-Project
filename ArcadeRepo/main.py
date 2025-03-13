@@ -4,6 +4,7 @@ import sys
 from classes.player import Player
 from classes.wall import Wall
 from classes.enemy import Enemy
+import classes.bullet
 from levelgen import *
 import levelgen
 import rooms.roomconfig as rc
@@ -20,24 +21,23 @@ pygame.display.set_caption("Connor Smells")
 WIDTH, HEIGHT = display_surface.get_size()
 PLAYER_WIDTH = WIDTH * 0.05
 PLAYER_HEIGHT = HEIGHT * 0.05
-ACC = WIDTH * 0.05
+ACC = WIDTH * 0.04
 FRIC = 0.2
 FPS = 60
 
 minion_image = pygame.image.load('ArcadeRepo/assets/mimion.png')
-
+homer_uchiha = pygame.image.load('ArcadeRepo/assets/homeruchiha.png')
 frames_per_sec = pygame.time.Clock()
 
 # Sprite initialization
 
 player_one = Player(PLAYER_HEIGHT, PLAYER_WIDTH, HEIGHT, WIDTH)
-random_wall = Wall(pygame.image.load('ArcadeRepo/assets/woodenwall.jpg'), 300, 300, WIDTH, HEIGHT)
-minion = Enemy(minion_image, WIDTH, HEIGHT)
 all_sprites = pygame.sprite.Group()
 walls = pygame.sprite.Group()
+friendly_bullets = pygame.sprite.Group()
+enemies = pygame.sprite.Group()
+enemy_bullets = pygame.sprite.Group()
 # all_sprites.add(player_one)
-all_sprites.add(random_wall)
-all_sprites.add(minion)
 
 # Room creation test
 """ test_blueprint = Blueprint(rc.config['spawn']['aydanspawn1'])
@@ -52,11 +52,34 @@ for x in walls:
 
 rooms, new_walls, floors, parent = flows.aydanflow1.aydanflow1.draw_level(start_x=100, start_y=100)
 
+set_rooms = set(rooms)
+rooms = list(set_rooms)
+
 for x in floors:
     all_sprites.add(x)
 for x in new_walls:
     all_sprites.add(x)
     walls.add(x)
+
+# test enemies
+'''minion = Enemy(WIDTH, HEIGHT, player_one, PLAYER_WIDTH, PLAYER_HEIGHT, "big", 3.5, 1)
+enemy1 = Enemy(WIDTH, HEIGHT, player_one, PLAYER_WIDTH, PLAYER_HEIGHT, "small", 3.5, 1)
+enemy2 = Enemy(WIDTH, HEIGHT, player_one, PLAYER_WIDTH, PLAYER_HEIGHT, "normal", 3.5, 1)
+enemy3 = Enemy(WIDTH, HEIGHT, player_one, PLAYER_WIDTH, PLAYER_HEIGHT, "normal", 3.5, 1)
+all_sprites.add(minion)
+all_sprites.add(enemy1)
+all_sprites.add(enemy2)
+all_sprites.add(enemy3)
+enemies.add(minion)
+enemies.add(enemy1)
+enemies.add(enemy2)
+enemies.add(enemy3)'''
+
+in_room = False
+temp_enemies = pygame.sprite.Group()
+
+# initialize temp walls variable
+temporary_walls = []
 
 # main game loop!
 while True:
@@ -70,14 +93,69 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 player_one.dash()
+            if event.key == pygame.K_y:
+                new_bullet = player_one.shoot(enemies)
+                if new_bullet:
+                    friendly_bullets.add(new_bullet)
+                    all_sprites.add(new_bullet)
     
-    display_surface.fill((0,0,0))
+    display_surface.fill((119, 112, 200))
+
+    for bullet in friendly_bullets:
+        delete_bullet = bullet.update(delta_time, enemies, walls)
+        display_surface.blit(bullet.surf, bullet.rect)
+        if delete_bullet:
+            friendly_bullets.remove(bullet)
+
+    for bullet in enemy_bullets:
+        delete_bullet = bullet.update(delta_time, enemies, walls)
+        display_surface.blit(bullet.surf, bullet.rect)
+        if delete_bullet:
+            friendly_bullets.remove(bullet)   
 
     for entity in all_sprites:
         entity.move(ACC, delta_time, FRIC, all_sprites)
         display_surface.blit(entity.surf, entity.rect)
+    
+    # should throw in a check for the rooms
+    '''1. Loop through a list of the rooms, checking if you're inside 2. if the room hasn't had its enemies defeated yet,
+    toggle a boolean, close doors, spawn enemies 3. After the enemies are defeated, toggle a boolean, open doors, and 
+    set up to check list of rooms again.'''
+    if not in_room:
+        for room in rooms:
+            if WIDTH / 2 < room.bot_right[0] - 250 and WIDTH / 2 > room.top_left[0] + 250 and HEIGHT / 2 < room.bot_right[1] - 250 and HEIGHT / 2 > room.top_left[1] + 250 and room.room_type != "spawn" and not room.cleared:
+                in_room = True
+                room.cleared = True
+                print(f"In room {rooms.index(room)}, type: {room.room_type}, {room.tiles}")
+                temporary_walls = room.shut_room()
+                for wall in temporary_walls:
+                    all_sprites.add(wall)
+                    walls.add(wall)
+                new_enemies = room.start_fight(WIDTH, HEIGHT, player_one, PLAYER_WIDTH, PLAYER_HEIGHT)
+                for enemy in new_enemies:
+                    all_sprites.add(enemy)
+                    enemies.add(enemy)
+                    temp_enemies.add(enemy)
+    elif len(temp_enemies) == 0 and room.room_type != 'spawn':
+                in_room = False
+                for wall in temporary_walls:
+                    wall.kill()
+    
 
-    player_one.move(ACC, delta_time, FRIC, all_sprites, walls)
+
+
+    # Need to add some sort of keydown sensor here for the player to be able to shoot.
+    # Might need to grow into its own file because of how items affect shooting.
+    for enemy in enemies:
+        enemy.self_movement(ACC, delta_time, FRIC, all_sprites, walls)
+        new_bullet = enemy.shoot(player_one, delta_time)
+        if new_bullet:
+            enemy_bullets.add(new_bullet)
+            all_sprites.add(new_bullet)
+
+    player_one.move(ACC, delta_time, FRIC, all_sprites, walls, rooms)
+
+    
     display_surface.blit(player_one.surf, player_one.rect)
     pygame.display.update()
     frames_per_sec.tick(FPS)

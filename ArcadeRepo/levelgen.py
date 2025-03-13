@@ -2,17 +2,26 @@ import pygame
 from pygame.locals import *
 from classes.wall import Wall
 from classes.floor import Floor
+from classes.enemy import Enemy
+import random
+import math
+import classes.spritesheet as spritesheet
 
 TILE_WIDTH = 200
 TILE_HEIGHT = 200
-floor_image = pygame.image.load('ArcadeRepo/assets/stonefloor.jpg')
+floor_image = spritesheet.get_dungeon_tile(48, 32)
 # This class will be interacted with by a Blueprint object. It basically decodes the information from the
 # blueprint and then draws it. I chose this because it is a very expandable design.
+# should store a set of enemies
+# Figure out how to add the room type to this object, it's what is being returned. Can probably do this in the
+# draw_level method
 class Room:
     def __init__(self, width, height):
         self.width = width
         self.height = height
         self.tiles = [[None for x in range(width)] for y in range(height)]
+        self.room_type = None
+        self.cleared = False
         # I'm going to worry about the special features later
 
     def set_tile(self, x, y, tile):
@@ -21,13 +30,80 @@ class Room:
     def add_feature(self, x, y, feature):
         pass
 
+    # Take the floors on each far side of the room, which would be the openings, and create walls there to shut the player
+    # into the room.
+    def shut_room(self):
+        overlay_room = Room(self.width, self.height)
+        for row_num, row in enumerate(self.tiles):
+            for tile_number, tile in enumerate(row):
+                if row_num == 0 and tile == "floor":
+                    overlay_room.set_tile(tile_number, row_num, "wall")
+                elif row_num == self.height - 1 and tile == "floor":
+                    overlay_room.set_tile(tile_number, row_num, "wall")
+                elif tile_number == 0 and tile == "floor":
+                    overlay_room.set_tile(tile_number, row_num, "wall")
+                elif tile_number == self.width - 1 and tile == "floor":
+                    overlay_room.set_tile(tile_number, row_num, "wall")
+        
+        walls, floors = overlay_room.create_room(self.top_left[0], self.top_left[1])
+        del(overlay_room)
+        return walls
+
+    # This method will find an xy coordinate in the room that the enemy will spawn at.
+    # This position has to be an alright distance from the player. We don't want them to spawn on the player.
+    # We'll say 200 pixels from the player?
+    def select_random_position(self, WIDTH, HEIGHT):
+        '''rand_angle = random.randrange(0, 3)
+        x = WIDTH / 2 - math.cos(rand_angle) * 200
+        y = HEIGHT / 2 - math.sin(rand_angle) * 200'''
+        x = random.randrange(int(self.top_left[0] + 250), int(self.bot_right[0] - 250))
+        y = random.randrange(int(self.top_left[1] + 250), int(self.bot_right[1] - 250))
+        return x, y
+
+    # This will be called after the room shuts to create the enemy setup and spawn them.
+    '''Current Room Types and their DC
+    Normal: 12
+    Hub: 16
+    Enemies and their costs
+    Small: 4
+    Normal: 2
+    Big: 3
+    '''
+    def start_fight(self, WIDTH, HEIGHT, player_one, PLAYER_WIDTH, PLAYER_HEIGHT):
+        # default DC is for a normal room
+        DC = 12
+        enemies = []
+        if self.room_type == "hub":
+            DC = 16
+        
+        while DC > 2:
+            new_enemy_type = random.choice(["small", "normal", "big"])
+            if new_enemy_type == "small" and DC < 4:
+                new_enemy_type == "big"
+            elif new_enemy_type == "small":
+                DC -= 4
+            elif new_enemy_type == "normal":
+                DC -= 2
+            elif new_enemy_type == "big":
+                DC -= 3
+            enemies.append(new_enemy_type)
+
+        # loop through list enemy types and change each element to an Enemy object
+        for i in range(len(enemies)):
+            posx, posy = self.select_random_position(WIDTH, HEIGHT)
+            new_enemy = Enemy(WIDTH, HEIGHT, player_one, PLAYER_WIDTH, PLAYER_HEIGHT, enemies[i], 3.5, 1, posx, posy)
+            enemies[i] = new_enemy
+        
+        return enemies
+
+    
     # This will be the method in charge of drawing the room! I'm going to start simple at first, but this
     # method will grow into a very large one as we add features to the game. It will return a list of sprites
     # So they can be added to sprite groups in the main script
     def create_room(self, x, y):
         # Stores the top left and bottom right coordinate for later use.
-        self.top_left = (x, y)
-        self.bot_right = (x + TILE_WIDTH * self.width, y + TILE_HEIGHT * self.height)
+        self.top_left = [x, y]
+        self.bot_right = [x + TILE_WIDTH * self.width, y + TILE_HEIGHT * self.height]
 
         walls = []
         floors = []

@@ -9,6 +9,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from rooms import roomconfig
 import levelgen
 
+# I think that something is happening in this code that is making the rooms not have accurate coordinates. Should
+# Check this out because we need accurate coordinates to be able to lock the player in rooms.
+
 def find_room_and_hallway_cords(direction, parent, room, hallway_layout, door_coordinate):
     if direction == "right":
         y_shift = (parent.height - room.height) / 2 * 200
@@ -175,6 +178,7 @@ class Node:
     def draw_level(self, start_x=None, start_y=None, parent=None, other_rooms=None, parent_type=None):
         hallway = None
         rooms = []
+        hallways = []
         if other_rooms:
             for r in other_rooms:
                 rooms.append(r)
@@ -255,9 +259,9 @@ class Node:
         else:
             new_walls, new_floors = room.create_room(start_x, start_y)
         
+        room.room_type = self.room_type
         rooms.append(room)
-        if hallway:
-            rooms.append(hallway)
+        # We're not going to store the hallway room objects anymore. I'm sick of them.
         # Add new sprites
         for wall in new_walls:
             walls.append(wall)
