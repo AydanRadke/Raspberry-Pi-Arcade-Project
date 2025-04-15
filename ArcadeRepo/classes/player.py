@@ -3,7 +3,18 @@ from pygame.locals import *
 import math
 from .bullet import Bullet
 vec = pygame.math.Vector2
-# TODO try to get this fixed lol
+
+""" This is the joystick initialization for the pi. Your gpio mileage may vary
+from gpiozero import DigitalInputDevice
+from pynput.keyboard import Controller
+
+keyboard = Controller()
+
+up = DigitalInputDevice(16, pull_up=True)
+down = DigitalInputDevice(27, pull_up=True)
+left = DigitalInputDevice(17, pull_up=True)
+right = DigitalInputDevice(5, pull_up=True) """
+
 # This is our player class
 screen_height = 0
 screen_width = 0
@@ -30,7 +41,7 @@ class Player(pygame.sprite.Sprite):
         self.damage_cooldown = 1
         self.damage_cooldown_left = self.damage_cooldown
 
-        self.shooting_cooldown_time = 0.5  # Shooting cooldown
+        self.shooting_cooldown_time = 0.4  # Shooting cooldown
         self.shooting_cooldown_left = self.shooting_cooldown_time  # Time before player can shoot again
         
     
@@ -59,9 +70,21 @@ class Player(pygame.sprite.Sprite):
         if pressed_keys[K_d]:
             self.acc.x = ACC * delta_time
 
+        """ This is for the joystick also
+        if up.value:
+            self.acc.y = -ACC * delta_time
+        if down.value:
+            self.acc.y = ACC * delta_time
+        if left.value:
+            self.acc.x = -ACC * delta_time
+        if right.value:
+            self.acc.x = ACC * delta_time """
+
         # Apply friction
         self.acc += self.vel * -FRIC
         self.vel += self.acc
+
+
 
         for wall in walls:
             if self.rect.colliderect(wall.rect):  # Check if the player collides with a wall
@@ -137,7 +160,11 @@ class Player(pygame.sprite.Sprite):
         if self.shooting_cooldown_left <= 0:
             speed = self.acceleration_value * 6
             starting_position = self.rect.center
-            new_bullet = Bullet(speed, starting_position, enemies, self.vel.normalize()) # TODO NOT IMPORTING RIGHT
+            new_bullet = None
+            if self.vel == vec(0, 0):
+                new_bullet = Bullet(speed, starting_position, enemies, vec(-1, 0))
+            else:
+                new_bullet = Bullet(speed, starting_position, enemies, self.vel.normalize()) # TODO NOT IMPORTING RIGHT
             self.shooting_cooldown_left = self.shooting_cooldown_time
             return new_bullet
         

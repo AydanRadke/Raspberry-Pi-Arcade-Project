@@ -123,8 +123,8 @@ class Enemy(pygame.sprite.Sprite):
     
     def new_angle(self):
         if self.type == "big":
-            print("trying to find the player") 
-            print(f'Player pos {self.screen_width / 2}, {self.screen_width / 2}') # What the hell man
+            # print("trying to find the player") 
+            # print(f'Player pos {self.screen_width / 2}, {self.screen_width / 2}') # What the hell man
             return math.atan2(self.screen_height / 2 - self.pos.y, self.screen_width / 2 - self.pos.x)
         return random.uniform(0, 2 * math.pi)
 

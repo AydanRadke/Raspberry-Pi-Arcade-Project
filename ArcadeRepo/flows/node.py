@@ -16,16 +16,16 @@ def find_room_and_hallway_cords(direction, parent, room, hallway_layout, door_co
     if direction == "right":
         y_shift = (parent.height - room.height) / 2 * 200
         x_shift = 0
-        room_x = parent.bot_right[0] + len(hallway_layout[0]) * 200
+        room_x = parent.bot_right[0] + len(hallway_layout[0]) * 200 - 400
         room_y = parent.top_left[1]
-        hallway_x = parent.bot_right[0]
+        hallway_x = parent.bot_right[0] - 200
         hallway_y = parent.top_left[1] + (door_coordinate[1] - 1) * 200
     if direction == "left":
         y_shift = (parent.height - room.height) / 2 * 200
         x_shift = 0
-        room_x = parent.top_left[0] - (len(hallway_layout[0]) + room.width) * 200
+        room_x = parent.top_left[0] - (len(hallway_layout[0]) - 2 + room.width) * 200
         room_y = parent.top_left[1]
-        hallway_x = parent.top_left[0] - len(hallway_layout[0]) * 200
+        hallway_x = parent.top_left[0] - len(hallway_layout[0]) * 200 + 200
         hallway_y = parent.top_left[1] + (door_coordinate[1] - 1) * 200
     if direction == "up":
         y_shift = 0
@@ -243,6 +243,7 @@ class Node:
             room_x, room_y, hallway_x, hallway_y = find_room_and_hallway_cords(direction, parent, room, hallway_layout, door_coordinate)
             # Need to add hallway now
             hallway = levelgen.Room(len(hallway_layout[0]), len(hallway_layout))
+            hallway.room_type = "hallway"
             for y, row in enumerate(hallway_layout):
                 for x, tile in enumerate(row):
                     hallway.set_tile(x, y, tile)

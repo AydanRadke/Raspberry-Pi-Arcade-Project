@@ -9,7 +9,8 @@ import classes.spritesheet as spritesheet
 
 TILE_WIDTH = 200
 TILE_HEIGHT = 200
-floor_image = spritesheet.get_dungeon_tile(48, 32)
+#floor_image = spritesheet.get_dungeon_tile(48, 32)
+floor_image = spritesheet.get_tile(0, 160)
 # This class will be interacted with by a Blueprint object. It basically decodes the information from the
 # blueprint and then draws it. I chose this because it is a very expandable design.
 # should store a set of enemies
@@ -96,7 +97,14 @@ class Room:
         
         return enemies
 
-    
+    def random_floor_image(self):
+        image = floor_image
+        if random.randint(1, 8) == 8:
+            xy = random.choice([(64, 176), (112, 160), (112, 176), (32, 176)])
+            image = spritesheet.get_tile(xy[0], xy[1])
+
+        return image
+
     # This will be the method in charge of drawing the room! I'm going to start simple at first, but this
     # method will grow into a very large one as we add features to the game. It will return a list of sprites
     # So they can be added to sprite groups in the main script
@@ -115,42 +123,58 @@ class Room:
                 floor = False
                 under_floor = False
                 wall = False
+                
+                # TODO TODO TODO Change each wall to grab a wall asset from the spreadsheet. We're changing them all to 
+                # Squares so that the walls on the left and right aren't weird sizes anymore.
                 if tile == "wall":
+                    WALL_WIDTH, WALL_HEIGHT = TILE_WIDTH, TILE_HEIGHT
+                    # under_floor = Floor(floor_image, TILE_WIDTH, TILE_HEIGHT, temp_x, y)
+                    image = spritesheet.get_tile(16, 112) # TODO middle of room wall, change to something different
                     # Top row wall
                     if y_level == 0:
-                        # TODO Change constant values to something that scales with screen size later!!
-                        WALL_WIDTH, WALL_HEIGHT = TILE_WIDTH, TILE_HEIGHT
-                        under_floor = Floor(floor_image, TILE_WIDTH, TILE_HEIGHT, temp_x, y)
-                    # Bottom row wall
+                        image = spritesheet.get_dungeon_tile(32, 16) # FIX THIS\/                    # Bottom row wall
                     elif y_level == len(self.tiles) - 1:
-                        WALL_WIDTH, WALL_HEIGHT = TILE_WIDTH, TILE_HEIGHT/2
+                        under_floor = None
+                        image = spritesheet.get_dungeon_tile(48, 64) # FIX THIS
                     # Left side wall
                     elif tile_number == 0:
-                        WALL_WIDTH, WALL_HEIGHT = TILE_WIDTH/2, TILE_HEIGHT
-                        under_floor = Floor(floor_image, TILE_WIDTH, TILE_HEIGHT, temp_x, y)
+                        under_floor = None
+                        image = spritesheet.get_dungeon_tile(16, 32) # FIX THIS
                     # Right side wall
                     elif tile_number == len(row) - 1:
-                        WALL_WIDTH, WALL_HEIGHT = TILE_WIDTH/2, TILE_HEIGHT
-                        under_floor = Floor(floor_image, TILE_WIDTH, TILE_HEIGHT, temp_x, y)
-                        temp_x += TILE_WIDTH - WALL_WIDTH
+                        under_floor = None
+                        image = spritesheet.get_dungeon_tile(80, 32) # FIX THIS
+                        
                     else:
                         # This is for the case that the wall is on the inside of the room.
                         WALL_WIDTH, WALL_HEIGHT = TILE_WIDTH, TILE_HEIGHT
                         # The under floor is here in case we want to change the size of interior walls later
-                        under_floor = Floor(floor_image, TILE_WIDTH, TILE_HEIGHT, temp_x, y)
-
-                    image = pygame.image.load('ArcadeRepo/assets/woodenwall.jpg')
+                        # under_floor = Floor(floor_image, TILE_WIDTH, TILE_HEIGHT, temp_x, y)
+                    # Something going on with the hallways.
+                    if self.room_type != "hallway":
+                        if y_level == 0 and tile_number == 0:
+                            image = spritesheet.get_dungeon_tile(16, 16)
+                            under_floor == None
+                        if y_level == 0 and tile_number == len(row) - 1:
+                            image = spritesheet.get_dungeon_tile(80, 16)
+                            under_floor == None
+                        if y_level == len(self.tiles) - 1 and tile_number == 0:
+                            image = spritesheet.get_dungeon_tile(16, 64)
+                            under_floor == None
+                        if y_level == len(self.tiles) - 1 and tile_number == len(row) - 1:
+                            image = spritesheet.get_dungeon_tile(80, 64)
+                            under_floor == None
+                    
                     wall = Wall(image, WALL_WIDTH, WALL_HEIGHT, temp_x, y)
 
-                    if WALL_WIDTH < TILE_WIDTH:
-                        temp_x += TILE_WIDTH - WALL_WIDTH
                     temp_x += WALL_WIDTH
 
                 if tile == "floor" or tile == "door":
+                    image = self.random_floor_image()
                     if y_level == len(self.tiles) - 1:
-                        floor = Floor(floor_image, TILE_WIDTH, TILE_HEIGHT/2, temp_x, y)
+                        floor = Floor(image, TILE_WIDTH, TILE_HEIGHT/2, temp_x, y)
                     else:
-                        floor = Floor(floor_image, TILE_WIDTH, TILE_HEIGHT, temp_x, y)
+                        floor = Floor(image, TILE_WIDTH, TILE_HEIGHT, temp_x, y)
                     temp_x += TILE_WIDTH
 
                 if under_floor:

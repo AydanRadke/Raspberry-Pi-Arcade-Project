@@ -1,6 +1,6 @@
 # This will be a dictionary that imports all of our rooms, so we can just import a dictionary when we need
 # to access the rooms, but also have the modularity of giving each room its own file
-from .normal import aydannormal2
+from .normal import aydannormal2, aydannormal1
 from .hub import aydanhub1
 from .spawn import aydanspawn1
 from .treasure import treasure_setup
@@ -13,6 +13,7 @@ config = {
     },
     'normal':{
         "aydannormal2": aydannormal2.aydannormal2_setup,
+        "aydannormal1": aydannormal1.aydannormal1_setup
     },
     'spawn': {
         'aydanspawn1': aydanspawn1.aydanspawn1_setup
